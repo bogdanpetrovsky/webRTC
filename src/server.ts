@@ -6,6 +6,7 @@ import { sequelize } from "./core/sequelize";
 import { authRoutes } from "./auth/routes";
 import session from 'express-session';
 import passport from "passport";
+const io = require('socket.io');
 
 export class Server {
     private httpServer: HTTPServer;
@@ -19,26 +20,27 @@ export class Server {
         this.loadDotEnvConfig();
         this.initialize();
         this.configureApp();
-        this.handleRoutes();
         this.handleSocketConnection();
     }
 
     private initialize(): void {
         this.app = express();
         this.httpServer = createServer(this.app);
-        this.io = socketIO.listen(this.httpServer);
-        sequelize.instance();
-    }
-
-    private handleRoutes(): void {
-        this.app.get("/", (req, res) => {
-            res.send(`<h1>Hello World</h1>`);
+        this.io = io(this.httpServer, {
+            cors: {
+                origins: ['http://localhost:4200']
+            }
         });
+        sequelize.instance();
     }
 
     private handleSocketConnection(): void {
         this.io.on("connection", (socket) => {
-            console.log(this.activeSockets);
+
+            socket.on('someEv', (data) => {
+                console.log(data);
+            });
+
             socket.on("disconnect", () => {
                 this.activeSockets = this.activeSockets.filter(
                   (existingSocket) => existingSocket !== socket.id

@@ -12,7 +12,7 @@ export interface UserInterface {
     lastName?: string;
     about?: string;
     imageUrl?: string;
-    interests?: string[];
+    interests?: string;
 }
 
 export interface UserModelInterface {
@@ -22,7 +22,7 @@ export interface UserModelInterface {
     lastName?: string;
     about?: string;
     imageUrl?: string;
-    interests?: string[];
+    interests?: string;
 }
 
 @Table
@@ -53,7 +53,7 @@ export class User extends Model<User> {
     // interests?: Interests[];
 
     @Column
-    interests?: string[];
+    interests?: string;
 
     toModel(): UserModelInterface {
         const userModel: UserModelInterface = {};
