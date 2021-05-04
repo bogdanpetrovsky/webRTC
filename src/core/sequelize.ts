@@ -1,6 +1,7 @@
 import { Column, CreatedAt, DataType, ForeignKey, ModelClassGetter, Sequelize, UpdatedAt } from 'sequelize-typescript';
 import { v4 } from 'uuid';
-import { ModelAttributeColumnOptions } from 'sequelize';
+import { DataTypes, ModelAttributeColumnOptions } from 'sequelize';
+import { User } from "./models/User";
 
 function init(): Sequelize {
   return new Sequelize({
@@ -21,12 +22,31 @@ export const sequelize = {
     if (!sequelizeInstance) {
       sequelizeInstance = init();
       sequelizeInstance.authenticate().then(() => {
+        User.init({
+          id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+          },
+          email: {
+            type: DataTypes.STRING,
+            unique: true
+          },
+          password: {type: DataTypes.STRING },
+          firstName: { type: DataTypes.STRING},
+          lastName: { type: DataTypes.STRING},
+          about: { type: DataTypes.STRING},
+          imageUrl: { type: DataTypes.STRING},
+          interests: { type: DataTypes.STRING},
+        }, { sequelize: sequelizeInstance, modelName: 'User'} );
+        User.sync({force: true}).then();
         console.log('Connection has been established successfully.');
       })
           .catch(err => {
             console.error('Unable to connect to the database:', err);
           });
     }
+
     return sequelizeInstance;
   }
 };

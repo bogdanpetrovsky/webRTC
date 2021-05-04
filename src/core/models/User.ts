@@ -27,7 +27,7 @@ export interface UserModelInterface {
 
 @Table
 export class User extends Model<User> {
-    @ColumnPrimaryKeyRandomUid
+    @Column({primaryKey: true})
     id!: number;
 
     @Unique
@@ -46,7 +46,7 @@ export class User extends Model<User> {
     @Column(DataType.TEXT)
     about?: string;
 
-    @ColumnUrl()
+    @Column
     imageUrl?: string;
 
     // @HasMany(() => Interests, { foreignKey: 'userId'})
@@ -67,5 +67,4 @@ export class User extends Model<User> {
 
         return userModel;
     }
-
 }

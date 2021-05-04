@@ -5,15 +5,15 @@ import { authService } from "./service";
 class AuthController {
     public async signUp(req: express.Request, res: express.Response, next: express.NextFunction) {
         const errors = validationResult(req);
+        console.log(req.body);
         if (!errors.isEmpty()) {
-            return res.status(400).json({errors: errors.array()});
+            return res.status(400).json({ errors: errors.array() });
         }
 
         try {
             const user = await authService.signUp({
                 email: req.body.email,
-                password: req.body.password,
-                recaptchaToken: req.body.recaptchaToken
+                password: req.body.password
             });
 
             res.status(200).json(user);
@@ -28,7 +28,7 @@ class AuthController {
 
             res.status(500).json({
                 error: true,
-                message: 'Something went wrong'
+                message: e
             });
         }
     }

@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcryptjs';
+const bcrypt = require('bcrypt');
 import * as _ from "underscore"
 import { User, UserInterface } from "../../core/models/User";
 
@@ -43,19 +43,20 @@ class UsersService {
       throw new Error('Secret not provided');
     }
 
-    const hashedPassword = await bcrypt.hash(options.password, process.env.PASSWORD_SECRET);
-    const userObject: UserInterface = {
-      email: options.email,
-      password: hashedPassword,
-    };
-    const includeObject: any = {};
+    return bcrypt.genSalt(10, function(err, salt) {
+      console.log(salt);
+      bcrypt.hash(options.password, salt, function(err, hash) {
+        const userObject: UserInterface = {
+          email: options.email,
+          password: hash,
+        };
 
-
-    if (options.firstName) { userObject.firstName = options.firstName; }
-    if (options.lastName) { userObject.lastName = options.lastName; }
-    if (options.imageUrl) { userObject.imageUrl = options.imageUrl; }
-
-    return User.create(_.extend(includeObject, userObject));
+        if (options.firstName) { userObject.firstName = options.firstName; }
+        if (options.lastName) { userObject.lastName = options.lastName; }
+        if (options.imageUrl) { userObject.imageUrl = options.imageUrl; }
+        User.create(userObject as any);
+      });
+    });
   }
 
   public async update(id: number, options: UserInterface) {

@@ -7,6 +7,7 @@ import { authRoutes } from "./auth/routes";
 import session from 'express-session';
 import passport from "passport";
 const io = require('socket.io');
+import * as bodyParser from 'body-parser';
 
 export class Server {
     private httpServer: HTTPServer;
@@ -91,6 +92,8 @@ export class Server {
     }
 
     private configureApp(): void {
+        this.app.use(bodyParser.urlencoded({extended: true}));
+        this.app.use(bodyParser.json({limit: '5mb'}));
         this.app.use(session({ secret: 'anything' }));
         this.app.use(passport.initialize());
         this.app.use(passport.session());
