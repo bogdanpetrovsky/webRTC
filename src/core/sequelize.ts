@@ -39,7 +39,7 @@ export const sequelize = {
           imageUrl: { type: DataTypes.STRING},
           interests: { type: DataTypes.STRING},
         }, { sequelize: sequelizeInstance, modelName: 'User'} );
-        User.sync({force: true}).then();
+        User.sync().then();
         console.log('Connection has been established successfully.');
       })
           .catch(err => {

@@ -12,9 +12,7 @@ class AuthService {
 
     public async signUp(options: SignUpInterface) {
         const existingUser = await usersService.getByEmail(options.email);
-        if (existingUser) {
-            throw new Error('User with such email already exists');
-        }
+        if (existingUser) { throw new Error('User with such email already exists'); }
 
         return usersService.create(options);
     }
@@ -24,32 +22,31 @@ class AuthService {
             throw new Error('Secret not provided');
         }
 
-        const saltRounds = '$2b$10$fCkXd.WNJN9C2wbZ/9TMpO';
+        const loggingUser = await User.findOne({ where: { email: options.email }});
 
-        return bcrypt.hash(options.password, saltRounds, function(err, hash) {
-            bcrypt.compare(options.password, hash, function(err, result) {
-                if (result) {
-                    User.findOne({ where: { email: options.email }}).then((user: User) => {
-                        if (!user) { throw new Error('User with such credentials does not exist!'); }
+        const compareResult = bcrypt.compareSync(options.password, loggingUser.password);
 
-                        const jti = uuid();
-                        if (!process.env.JWT_SECRET) { throw new Error('Secret not provided') }
-                        console.log(user.toModel());
-                        return {
-                            token: jwt.sign({ jti, id: user.id, iat: Date.now(), iss: user.email },
-                                process.env.JWT_SECRET,
-                                {expiresIn: '30d'}
-                            ),
-                            user: user.toModel()
-                        };
-                    });
-                }
-                // if passwords do not match
-                else {
-                    console.log("Invalid password!");
-                }
-            });
-        });
+        if (compareResult) {
+            return {
+                token: this.generateToken(loggingUser),
+                user: loggingUser.toModel()
+            }
+        } else {
+            throw new Error('Invalid password');
+        }
+    }
+
+    private generateToken(user: User) {
+        const jti = uuid();
+        if (!process.env.JWT_SECRET) {
+            throw new Error('Secret not provided')
+        }
+
+        return jwt.sign(
+            { jti, id: user.id, iat: Date.now(), iss: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
+        )
     }
 }
 

@@ -43,20 +43,19 @@ class UsersService {
       throw new Error('Secret not provided');
     }
 
-    return bcrypt.genSalt(10, function(err, salt) {
-      console.log(salt);
-      bcrypt.hash(options.password, salt, function(err, hash) {
-        const userObject: UserInterface = {
-          email: options.email,
-          password: hash,
-        };
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(options.password, salt);
 
-        if (options.firstName) { userObject.firstName = options.firstName; }
-        if (options.lastName) { userObject.lastName = options.lastName; }
-        if (options.imageUrl) { userObject.imageUrl = options.imageUrl; }
-        User.create(userObject as any);
-      });
-    });
+    const userObject: UserInterface = {
+      email: options.email,
+      password: hash,
+    };
+
+    if (options.firstName) { userObject.firstName = options.firstName; }
+    if (options.lastName) { userObject.lastName = options.lastName; }
+    if (options.imageUrl) { userObject.imageUrl = options.imageUrl; }
+
+    return User.create(userObject as any);
   }
 
   public async update(id: number, options: UserInterface) {
@@ -112,6 +111,12 @@ class UsersService {
       total,
       offset
     };
+  }
+
+  public async getByEmailAndPassword(email: string, password: string) {
+    return User.findOne({
+      where: {email, password},
+    });
   }
 
   // public async isAdmin(userId: Id) {

@@ -1,5 +1,5 @@
 import express, { Application } from "express";
-import socketIO, { Server as SocketIOServer } from "socket.io";
+import { Server as SocketIOServer } from "socket.io";
 import { createServer, Server as HTTPServer } from "http";
 import * as dotenv from 'dotenv';
 import { sequelize } from "./core/sequelize";
@@ -8,6 +8,9 @@ import session from 'express-session';
 import passport from "passport";
 const io = require('socket.io');
 import * as bodyParser from 'body-parser';
+import cors from 'cors';
+import { usersRoutes } from "./users/routes";
+import { initPassportConfiguration } from "./auth/passport/passport";
 
 export class Server {
     private httpServer: HTTPServer;
@@ -95,8 +98,18 @@ export class Server {
         this.app.use(bodyParser.urlencoded({extended: true}));
         this.app.use(bodyParser.json({limit: '5mb'}));
         this.app.use(session({ secret: 'anything' }));
+        this.app.use(cors({
+            allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token",
+                'Authorization', 'Uppy-Auth-Token'],
+            credentials: true,
+            methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+            origin: process.env.FRONT_END_URL,
+            preflightContinue: false
+        }));
         this.app.use(passport.initialize());
+        initPassportConfiguration();
         this.app.use(passport.session());
+        this.app.use('/users', passport.authenticate('jwt', {session: false}),  usersRoutes);
         this.app.use('/', authRoutes);
     }
 
