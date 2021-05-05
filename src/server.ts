@@ -12,11 +12,16 @@ import cors from 'cors';
 import { usersRoutes } from "./users/routes";
 import { initPassportConfiguration } from "./auth/passport/passport";
 
+export interface IActiveSocket {
+    id: string;
+    data: string;
+}
+
 export class Server {
     private httpServer: HTTPServer;
     private app: Application;
     private io: SocketIOServer;
-    private activeSockets: string[] = [];
+    private activeSockets: IActiveSocket[] = [];
 
     private readonly DEFAULT_PORT = process.env.PORT || "5000";
 
@@ -40,14 +45,10 @@ export class Server {
 
     private handleSocketConnection(): void {
         this.io.on("connection", (socket) => {
-
-            socket.on('someEv', (data) => {
-                console.log(data);
-            });
-
+            console.log(socket);
             socket.on("disconnect", () => {
                 this.activeSockets = this.activeSockets.filter(
-                  (existingSocket) => existingSocket !== socket.id
+                  (existingSocket) => existingSocket.id !== socket.id
                 );
                 socket.broadcast.emit("remove-user", {
                     socketId: socket.id,
@@ -69,20 +70,21 @@ export class Server {
             });
 
             const existingSocket = this.activeSockets.find(
-              (existingSocket) => existingSocket === socket.id
+              (existingSocket) => existingSocket.id === socket.id
             );
 
             if (!existingSocket) {
-                this.activeSockets.push(socket.id);
+                this.activeSockets.push({id: socket.id, data: JSON.parse(socket.handshake.query.data as string)});
 
                 socket.emit("update-user-list", {
                     users: this.activeSockets.filter(
-                      (existingSocket) => existingSocket !== socket.id
+                      (existingSocket) => existingSocket.id !== socket.id
                     ),
                 });
 
                 socket.broadcast.emit("update-user-list", {
-                    users: [socket.id],
+                    users: this.activeSockets.filter(
+                        (existingSocket) => existingSocket.id !== socket.id)
                 });
             }
         });

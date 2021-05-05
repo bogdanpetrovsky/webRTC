@@ -38,6 +38,8 @@ export const sequelize = {
           about: { type: DataTypes.STRING},
           imageUrl: { type: DataTypes.STRING},
           interests: { type: DataTypes.STRING},
+          age: { type: DataTypes.INTEGER},
+          gender: { type: DataTypes.STRING},
         }, { sequelize: sequelizeInstance, modelName: 'User'} );
         User.sync().then();
         console.log('Connection has been established successfully.');

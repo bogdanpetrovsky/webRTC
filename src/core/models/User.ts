@@ -1,10 +1,5 @@
 import { Column, DataType, Model, Table, Unique } from 'sequelize-typescript';
 
-import {
-    ColumnPrimaryKeyRandomUid,
-    ColumnUrl
-} from '../sequelize';
-
 export interface UserInterface {
     email?: string;
     password?: string;
@@ -13,6 +8,8 @@ export interface UserInterface {
     about?: string;
     imageUrl?: string;
     interests?: string;
+    gender?: string;
+    age?: number;
 }
 
 export interface UserModelInterface {
@@ -23,6 +20,8 @@ export interface UserModelInterface {
     about?: string;
     imageUrl?: string;
     interests?: string;
+    gender?: string;
+    age?: number;
 }
 
 @Table
@@ -49,8 +48,11 @@ export class User extends Model<User> {
     @Column
     imageUrl?: string;
 
-    // @HasMany(() => Interests, { foreignKey: 'userId'})
-    // interests?: Interests[];
+    @Column
+    gender?: string;
+
+    @Column
+    age?: number;
 
     @Column
     interests?: string;
@@ -64,6 +66,8 @@ export class User extends Model<User> {
         if (this.imageUrl) { userModel.imageUrl = this.imageUrl; }
         if (this.about) { userModel.about = this.about; }
         if (this.interests) { userModel.interests = this.interests; }
+        if (this.gender) { userModel.gender = this.gender; }
+        if (this.age) { userModel.age = this.age; }
 
         return userModel;
     }

@@ -9,24 +9,17 @@ interface IUserCreateOptions {
   emailVerified: boolean;
 }
 
-export interface IPendingActionsCount {
-  applications?: number;
-  contactRequests?: number;
-  teamInvitations?: number;
-  total?: number;
-}
-
 class UsersService {
   public async userExists(id: number) {
     return User.findByPk(id).then(u => u !== null);
   }
 
   public async getById(id: number) {
-    return User.scope('full').findByPk(id);
+    return User.findByPk(id);
   }
 
   public async getUserModelById(id: number, requestingUserId?: number) {
-    const requestedUser = await User.scope('full').findByPk(id);
+    const requestedUser = await User.findByPk(id);
     const requestingUser = await User.findByPk(requestingUserId);
 
     return requestedUser?.toModel();
@@ -59,7 +52,7 @@ class UsersService {
   }
 
   public async update(id: number, options: UserInterface) {
-    const user = await User.scope('full').findByPk(id);
+    const user = await User.findByPk(id);
     if (!user) {
       throw new Error('No user with such id!');
     }
@@ -78,6 +71,14 @@ class UsersService {
     }
     if (options.hasOwnProperty('interests')) {
       updateObject.interests = options.interests;
+    }
+
+    if (options.hasOwnProperty('age')) {
+      updateObject.age = options.age;
+    }
+
+    if (options.hasOwnProperty('gender')) {
+      updateObject.gender = options.gender;
     }
 
     await user.update(updateObject);
@@ -119,11 +120,6 @@ class UsersService {
     });
   }
 
-  // public async isAdmin(userId: Id) {
-  //   const user = await User.findByPk(userId);
-  //   if (!user) { return false; }
-  //   return user.role.name === 'admin';
-  // }
 }
 
 export const usersService = new UsersService();

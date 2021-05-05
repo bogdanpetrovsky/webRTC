@@ -34,6 +34,18 @@ class UsersController {
       updateObject.imageUrl = req.body.imageUrl ? req.body.imageUrl : null;
     }
 
+    if (req.body.hasOwnProperty('age')) {
+      updateObject.age = req.body.age ? req.body.age : null;
+    }
+
+    if (req.body.hasOwnProperty('gender')) {
+      updateObject.gender = req.body.gender ? req.body.gender : null;
+    }
+
+    if (req.body.hasOwnProperty('interests')) {
+      updateObject.interests = req.body.interests ? req.body.interests : null;
+    }
+
     try {
       const user = await usersService.update(parseInt(req.params.id,10), updateObject);
       res.status(200).json(user.toModel());
@@ -68,6 +80,36 @@ class UsersController {
       res.status(200).json(users);
     } catch (e) {
       res.status(500).json({ errors: Error });
+    }
+  }
+
+  public async search(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({errors: errors.array()});
+    }
+
+    if (!req.query.query) {
+      throw new Error('query param is required!')
+    }
+
+    try {
+      const query = req.query.query.toString().toLocaleLowerCase();
+      const interests = [
+        { name: 'computers'},
+        { name: 'sports'},
+        { name: 'dates'},
+        { name: 'films'},
+        { name: 'education'},
+        { name: 'books'},
+        { name: 'politics'},
+        { name: 'science'},
+      ];
+      const result = interests.filter((interest) =>  interest.name.startsWith(query));
+      console.log(result);
+      res.status(200).json(result);
+    } catch (e) {
+      res.status(500).json({ error: true });
     }
   }
 }
