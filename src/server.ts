@@ -45,7 +45,6 @@ export class Server {
 
     private handleSocketConnection(): void {
         this.io.on("connection", (socket) => {
-            console.log(socket);
             socket.on("disconnect", () => {
                 this.activeSockets = this.activeSockets.filter(
                   (existingSocket) => existingSocket.id !== socket.id
@@ -60,6 +59,10 @@ export class Server {
                     offer: data.offer,
                     socket: socket.id,
                 });
+            });
+
+            socket.on("incoming-message", (data) => {
+                socket.broadcast.emit("incoming-message", data);
             });
 
             socket.on("make-answer", (data) => {
