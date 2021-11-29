@@ -1,4 +1,4 @@
-import { Column, DataType, Model, Table, Unique } from 'sequelize-typescript';
+import {Column, DataType, Model, Scopes, Table, Unique} from 'sequelize-typescript';
 
 export interface UserInterface {
     email?: string;
@@ -23,7 +23,9 @@ export interface UserModelInterface {
     gender?: string;
     age?: number;
 }
-
+@Scopes(() => ({
+    full: { }
+}))
 @Table
 export class User extends Model<User> {
     @Column({primaryKey: true})

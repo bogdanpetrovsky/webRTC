@@ -11,6 +11,8 @@ import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import { usersRoutes } from "./users/routes";
 import { initPassportConfiguration } from "./auth/passport/passport";
+import { ExpressPeerServer } from "peer";
+
 
 export interface IActiveSocket {
     id: string;
@@ -40,56 +42,67 @@ export class Server {
                 origins: ['http://localhost:4200']
             }
         });
+        const peerServer = ExpressPeerServer(this.httpServer);
+        this.app.use('/peerjs', peerServer);
         sequelize.instance();
     }
 
     private handleSocketConnection(): void {
+        // this.io.on("connection", (socket) => {
+        //     socket.on("disconnect", () => {
+        //         this.activeSockets = this.activeSockets.filter(
+        //           (existingSocket) => existingSocket.id !== socket.id
+        //         );
+        //         socket.broadcast.emit("remove-user", {
+        //             socketId: socket.id,
+        //         });
+        //     });
+        //
+        //     socket.on("call-user", (data) => {
+        //         socket.to(data.to).emit("call-made", {
+        //             offer: data.offer,
+        //             socket: socket.id,
+        //         });
+        //     });
+        //
+        //     socket.on("incoming-message", (data) => {
+        //         socket.broadcast.emit("incoming-message", data);
+        //     });
+        //
+        //     socket.on("make-answer", (data) => {
+        //         socket.to(data.to).emit("answer-made", {
+        //             socket: socket.id,
+        //             answer: data.answer,
+        //         });
+        //     });
+        //
+        //     const existingSocket = this.activeSockets.find(
+        //       (existingSocket) => existingSocket.id === socket.id
+        //     );
+        //
+        //     if (!existingSocket) {
+        //         this.activeSockets.push({id: socket.id, data: JSON.parse(socket.handshake.query.data as string)});
+        //
+        //         socket.emit("update-user-list", {
+        //             users: this.activeSockets.filter(
+        //               (existingSocket) => existingSocket.id !== socket.id
+        //             ),
+        //         });
+        //
+        //         socket.broadcast.emit("update-user-list", {
+        //             users: this.activeSockets.filter(
+        //                 (existingSocket) => existingSocket.id !== socket.id)
+        //         });
+        //     }
+        // });
         this.io.on("connection", (socket) => {
-            socket.on("disconnect", () => {
-                this.activeSockets = this.activeSockets.filter(
-                  (existingSocket) => existingSocket.id !== socket.id
-                );
-                socket.broadcast.emit("remove-user", {
-                    socketId: socket.id,
+            socket.on("join-room", (roomId, userId, userName) => {
+                socket.join(roomId);
+                socket.broadcast.to(roomId).emit("user-connected", userId);
+                socket.on("message", (message) => {
+                    io.to(roomId).emit("createMessage", message, userName);
                 });
             });
-
-            socket.on("call-user", (data) => {
-                socket.to(data.to).emit("call-made", {
-                    offer: data.offer,
-                    socket: socket.id,
-                });
-            });
-
-            socket.on("incoming-message", (data) => {
-                socket.broadcast.emit("incoming-message", data);
-            });
-
-            socket.on("make-answer", (data) => {
-                socket.to(data.to).emit("answer-made", {
-                    socket: socket.id,
-                    answer: data.answer,
-                });
-            });
-
-            const existingSocket = this.activeSockets.find(
-              (existingSocket) => existingSocket.id === socket.id
-            );
-
-            if (!existingSocket) {
-                this.activeSockets.push({id: socket.id, data: JSON.parse(socket.handshake.query.data as string)});
-
-                socket.emit("update-user-list", {
-                    users: this.activeSockets.filter(
-                      (existingSocket) => existingSocket.id !== socket.id
-                    ),
-                });
-
-                socket.broadcast.emit("update-user-list", {
-                    users: this.activeSockets.filter(
-                        (existingSocket) => existingSocket.id !== socket.id)
-                });
-            }
         });
     }
 
@@ -104,8 +117,7 @@ export class Server {
         this.app.use(bodyParser.json({limit: '5mb'}));
         this.app.use(session({ secret: 'anything' }));
         this.app.use(cors({
-            allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token",
-                'Authorization', 'Uppy-Auth-Token'],
+            allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token", 'Authorization', 'Uppy-Auth-Token'],
             credentials: true,
             methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
             origin: process.env.FRONT_END_URL,
