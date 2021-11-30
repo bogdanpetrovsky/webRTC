@@ -48,61 +48,59 @@ export class Server {
     }
 
     private handleSocketConnection(): void {
-        // this.io.on("connection", (socket) => {
-        //     socket.on("disconnect", () => {
-        //         this.activeSockets = this.activeSockets.filter(
-        //           (existingSocket) => existingSocket.id !== socket.id
-        //         );
-        //         socket.broadcast.emit("remove-user", {
-        //             socketId: socket.id,
-        //         });
-        //     });
-        //
-        //     socket.on("call-user", (data) => {
-        //         socket.to(data.to).emit("call-made", {
-        //             offer: data.offer,
-        //             socket: socket.id,
-        //         });
-        //     });
-        //
-        //     socket.on("incoming-message", (data) => {
-        //         socket.broadcast.emit("incoming-message", data);
-        //     });
-        //
-        //     socket.on("make-answer", (data) => {
-        //         socket.to(data.to).emit("answer-made", {
-        //             socket: socket.id,
-        //             answer: data.answer,
-        //         });
-        //     });
-        //
-        //     const existingSocket = this.activeSockets.find(
-        //       (existingSocket) => existingSocket.id === socket.id
-        //     );
-        //
-        //     if (!existingSocket) {
-        //         this.activeSockets.push({id: socket.id, data: JSON.parse(socket.handshake.query.data as string)});
-        //
-        //         socket.emit("update-user-list", {
-        //             users: this.activeSockets.filter(
-        //               (existingSocket) => existingSocket.id !== socket.id
-        //             ),
-        //         });
-        //
-        //         socket.broadcast.emit("update-user-list", {
-        //             users: this.activeSockets.filter(
-        //                 (existingSocket) => existingSocket.id !== socket.id)
-        //         });
-        //     }
-        // });
         this.io.on("connection", (socket) => {
             socket.on("join-room", (roomId, userId, userName) => {
                 socket.join(roomId);
                 socket.broadcast.to(roomId).emit("user-connected", userId);
                 socket.on("message", (message) => {
-                    io.to(roomId).emit("createMessage", message, userName);
+                    this.io.to(roomId).emit("createMessage", message, userName);
                 });
             });
+            socket.on("disconnect", () => {
+                this.activeSockets = this.activeSockets.filter(
+                  (existingSocket) => existingSocket.id !== socket.id
+                );
+                socket.broadcast.emit("remove-user", {
+                    socketId: socket.id,
+                });
+            });
+
+            socket.on("call-user", (data) => {
+                socket.to(data.to).emit("call-made", {
+                    offer: data.offer,
+                    socket: socket.id,
+                });
+            });
+
+            socket.on("incoming-message", (data) => {
+                socket.broadcast.emit("incoming-message", data);
+            });
+
+            socket.on("make-answer", (data) => {
+                socket.to(data.to).emit("answer-made", {
+                    socket: socket.id,
+                    answer: data.answer,
+                });
+            });
+
+            const existingSocket = this.activeSockets.find(
+              (existingSocket) => existingSocket.id === socket.id
+            );
+
+            if (!existingSocket) {
+                this.activeSockets.push({id: socket.id, data: JSON.parse(socket.handshake.query.data as string)});
+
+                socket.emit("update-user-list", {
+                    users: this.activeSockets.filter(
+                      (existingSocket) => existingSocket.id !== socket.id
+                    ),
+                });
+
+                socket.broadcast.emit("update-user-list", {
+                    users: this.activeSockets.filter(
+                      (existingSocket) => existingSocket.id !== socket.id)
+                });
+            }
         });
     }
 
